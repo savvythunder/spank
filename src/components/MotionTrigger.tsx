@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Power, Activity, Volume2, VolumeX, Zap, TrendingUp, BarChart2, ChevronDown, ChevronUp, Gauge, Target, Flame, Loader2 } from 'lucide-react';
+import { Power, Activity, Volume2, VolumeX, Zap, TrendingUp, BarChart2, ChevronDown, ChevronUp, Gauge, Target, Flame, Loader2, Github } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Card } from '@/components/ui/card';
@@ -70,6 +70,7 @@ export default function MotionTrigger() {
   const [peakMagnitude, setPeakMagnitude] = useState(0);
   const [lastFlash, setLastFlash] = useState<{ name: string; category: string } | null>(null);
   const [comboFlash, setComboFlash] = useState<{ count: number; key: number } | null>(null);
+  const [starCount, setStarCount] = useState<number | null>(null);
 
   const audioBufferCache = useRef<Record<string, AudioBuffer>>({});
   const lastHitTime = useRef(0);
@@ -98,6 +99,20 @@ export default function MotionTrigger() {
       localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
     } catch {}
   }, [sensitivity, selectedCategory, playbackSpeed, volumeScaling, fastMode, isMuted]);
+
+  useEffect(() => {
+    fetch('https://api.github.com/repos/savvythunder/spank')
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch github stars');
+        return res.json();
+      })
+      .then(data => {
+        if (data && typeof data.stargazers_count === 'number') {
+          setStarCount(data.stargazers_count);
+        }
+      })
+      .catch(err => console.error('Error fetching github stars', err));
+  }, []);
 
   const drawFromDeck = useCallback((key: string, pool: AudioFile[]): AudioFile => {
     let deck = deckRef.current.get(key);
@@ -652,6 +667,27 @@ export default function MotionTrigger() {
             </div>
           </div>
         )}
+
+        {/* GitHub Star Badge */}
+        <footer className="mt-8 flex justify-center items-center">
+          <a
+            href="https://github.com/savvythunder/spank"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2.5 px-4 py-2 rounded-full border border-primary/30 bg-secondary/15 backdrop-blur-sm text-muted-foreground hover:text-primary hover:border-primary/80 hover:shadow-[0_0_15px_rgba(255,0,255,0.25)] transition-all duration-300 group font-mono"
+          >
+            <Github className="w-4 h-4 transition-transform group-hover:scale-110 group-hover:rotate-6" />
+            <span className="text-[11px] font-bold uppercase tracking-wider">Star us on GitHub</span>
+            {starCount !== null && (
+              <>
+                <span className="h-3 w-[1px] bg-border/50" />
+                <span className="text-[11px] font-black text-primary flex items-center gap-0.5">
+                  ★ <span className="text-foreground group-hover:text-primary transition-colors">{starCount}</span>
+                </span>
+              </>
+            )}
+          </a>
+        </footer>
 
       </motion.main>
     </div>
